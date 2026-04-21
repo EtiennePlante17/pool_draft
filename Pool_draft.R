@@ -33,8 +33,7 @@ View(proj |>
 
 
 
-## Faire un quarto pour les résultats du pool versus le prédit
-# mettre la citation de Mike en entré
+
 
 #faire des buckets des joueurs
 #percentile par position
