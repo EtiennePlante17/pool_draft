@@ -1,14 +1,26 @@
-## Faire un quarto pour les résultats du pool versus le prédit
-# mettre la citation de Mike en entré
-# Faire une section meilleur DG pour le repechage
-# Faire une section coach pour la gestion du banc
+---
+title: "Résultats du pool de saison régulière 2025"
+format:
+  html:
+    embed-resources: true
+execute:
+  echo: false
+---
 
+::: callout-tip
+"*Luck favours the brave and the well prepared.*"
+
+\- Mike
+:::
+
+```{r}
 
 library(dplyr)
 library(purrr)
 library(ggplot2)
 library(tidyr)
 
+# Lire l'historique par période
 read_periods <- function(year_draft, n_periods = 28) {
   
   map_dfr(1:n_periods, function(i) {
@@ -27,11 +39,19 @@ read_periods <- function(year_draft, n_periods = 28) {
 }
 
 results <- read_periods(2025, 28)
+
+# Lire l'ancien fichier de projections que j'avais
 projections <- read.csv2(
   file.path("data", 2025, "fantrax_projections.csv"), 
   sep = ",")
 
-### Perte points par gestion des actifs
+```
+
+# Points réels versus optimaux
+
+> Le graphique suivant présente les points réels effectués tout au long de la saison en bleu et les points optimaux en rouge. Les points optimaux laissent votre pire joueur par position sur le banc selon chaque semaine. Le pourcentage représente l'efficacité.
+
+```{r}
 points_opt <- results |>
   group_by(Status, Period, Position) |>
   mutate(
@@ -61,7 +81,7 @@ coach_perf <- points_reels |>
   arrange((total_reel), desc(efficiency))
 
 ordre_status <- coach_perf |>
-  arrange(total_reel) |>   # 👈 ordre croissant
+  arrange(total_reel) |>   
   pull(Status)
 
 coach_perf_long <- coach_perf |>
@@ -105,7 +125,20 @@ ggplot(coach_perf_long, aes(x = Status, y = points, fill = type)) +
   
   expand_limits(y = max(coach_perf$total_optimal) * 1.1)
 
-### Points dans le temps
+```
+
+Conclusions:
+
+1.  Lorélie aurait pu atteindre le top 3 et cash out si elle avait géré ses bancs comme du monde.
+2.  Mariève a tellement "assert dominance" qu'elle a mal gérée son banc tout en restant première.
+3.  William est le pire gestionnaire de son banc.
+
+# Points par semaine
+
+> Les semaines 19 et 20 sont nulles à cause des olympiques.
+
+```{r}
+
 points_temps <- results |>
   filter(Roster.Status == "Active") |>
   group_by(Status, Period) |>
@@ -120,14 +153,26 @@ ggplot(points_temps, aes(x = Period, y = points, color = Status)) +
   ) +
   theme_minimal()
 
-points_temps %>% 
+meilleur_score <- points_temps %>% 
   filter(points == max(points_temps$points))
 
-points_temps |>
+paste0("Félicitations à ",meilleur_score$Status," qui a eu ", 
+       meilleur_score$points," points lors de la semaine ", meilleur_score$Period,
+       ".")
+
+pire_score <- points_temps |>
   filter(!Period %in% c(19, 20,28)) |>
   slice_min(points, n = 1)
 
-### Points cumulés
+paste0("Mention non honorable à ",pire_score$Status," qui a eu ", 
+       pire_score$points," points lors de la semaine ", pire_score$Period,
+       ".")
+
+```
+
+# Points cumulés
+
+```{r}
 points_cum <- points_temps |>
   arrange(Status, Period) |>
   group_by(Status) |>
@@ -166,29 +211,13 @@ pct_first <- points_rank |>
 
 paste0(winner, " a assert sa dominance dans ", pct_first,"% des périodes!")
 
-### Comparaison du prédit et du réel optimal
-projections |>
-  group_by(Status, Position) |>
-  mutate(
-    rank_pos = rank(FPts, ties.method = "first"),
-    n_pos = n()
-  ) |>
-  filter(rank_pos > 1) |>
-  group_by(Status, Position) |>
-  summarise(points_projetes = sum(FPts, na.rm = TRUE), .groups = "drop") |>
-  left_join(
-    results |>
-  group_by(Status, Position) |>
-  mutate(
-    rank_pos = rank(FPts, ties.method = "first"),
-    n_pos = n()
-  ) |>
-  filter(rank_pos > 1) |> 
-  group_by(Status, Position) |>
-  summarise(points_optimaux = sum(FPts, na.rm = TRUE), .groups = "drop"),
-  by = c("Status", "Position")
-  )
+```
 
+Il y a eu peu de changements du classement au fil de la saison, il semble y avoir 3 catégories claires: les participants talentueux (MB et FG), le monde mid et ceux qui conaissent vraiment rien au hockey (PM, XR et ZC)
+
+# Comparaison du projeté et de l'optimal par position
+
+```{r}
 df_plot <- projections |>
   filter(Status != "FA") |>
   group_by(Status, Position) |>
@@ -212,13 +241,15 @@ df_plot <- projections |>
   mutate(ecart = points_optimaux - points_projetes,
          ratio = points_optimaux / points_projetes)
 
-
-
-ggplot(df_plot, aes(x = Position, y = Status, fill = ratio)) +
+ggplot(df_plot, aes(x = Position, y = Status, fill = ecart)) +
   geom_tile() +
-  scale_fill_gradient2(low = "red", mid = "yellow", high = "blue", midpoint = 1) +
+  scale_fill_gradient2(low = "red", mid = "green", high = "blue", midpoint = 0) +
   labs(
     title = "Heatmap performance vs projections",
     fill = "Écart"
-  )
+  ) +
+  geom_text(aes(label = round(ecart, 2)), size = 3)
 
+```
+
+Les attaquants optimisés de Mariève ont fait 122 points de plus que selon le projeté!
