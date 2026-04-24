@@ -5,6 +5,7 @@ format:
     embed-resources: true
 execute:
   echo: false
+  message: false
 ---
 
 ::: callout-tip
@@ -13,12 +14,14 @@ execute:
 \- Mike
 :::
 
-```{r}
+```{r, echo=FALSE}
+#| message: false
 
 library(dplyr)
 library(purrr)
 library(ggplot2)
 library(tidyr)
+library(plotly)
 
 # Lire l'historique par période
 read_periods <- function(year_draft, n_periods = 28) {
@@ -144,6 +147,7 @@ points_temps <- results |>
   group_by(Status, Period) |>
   summarise(points = sum(FPts, na.rm = TRUE), .groups = "drop")
 
+ggplotly(
 ggplot(points_temps, aes(x = Period, y = points, color = Status)) +
   geom_line(linewidth = 1) +
   labs(
@@ -152,6 +156,7 @@ ggplot(points_temps, aes(x = Period, y = points, color = Status)) +
     y = "Points"
   ) +
   theme_minimal()
+)
 
 meilleur_score <- points_temps %>% 
   filter(points == max(points_temps$points))
@@ -179,6 +184,7 @@ points_cum <- points_temps |>
   mutate(points_cum = cumsum(points)) |>
   ungroup()
 
+ggplotly(
 ggplot(points_cum, aes(x = Period, y = points_cum, color = Status)) +
   geom_line(linewidth = 1.2) +
   labs(
@@ -187,6 +193,7 @@ ggplot(points_cum, aes(x = Period, y = points_cum, color = Status)) +
     y = "Points cumulés"
   ) +
   theme_minimal()
+)
 
 # 1. Identifier le gagnant (dernier cumul)
 winner <- points_cum |>
