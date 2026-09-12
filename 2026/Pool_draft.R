@@ -1,38 +1,78 @@
+year_draft <- 2026
+recruteur <- "EP"
+
+# Fonctions
 source("src/find_player.R")
 source("src/picked_player.R")
 source("src/get_stat.R")
 source("src/get_merge_historique.R")
+source("src/show_players.R")
+# Params
+source(file.path("params", year_draft, "draft_rules.R"))
 
-source("params/draft_rules.R")
-
-year_draft <- 2025
-
-projections <- read.csv2(
-  file.path("data", year_draft, "fantrax_proj.csv"), 
-  sep = ";")
+# données de projection et historique
+projections <- read.csv2(file.path("data", year_draft, "fantrax_proj.csv"), sep = ",") |>
+  mutate(salaire = as.numeric(gsub(",", "", Salary)))
 
 proj <- merge_historique(projections, history_year = 3)
 
-proj <- picked_player(proj, "*02un4*", "AP")
-find_player(proj, "EDM", "F", "C")
+# Stats du draft
+pool_status(proj)
+roster_status(proj, "EP")
 
-projections %>%
-  filter(Player == "Elias Pettersson")
-
-historique_an1 %>%
-  filter(Player == "Elias Pettersson")
-historique_an2 %>%
-  filter(Player == "Elias Pettersson")
-
-roster_status(proj, "AP")
-
+# Afficher les joueurs
 View(proj |>
-  filter(available == 1 & FPts > 30) |>
-  arrange(pts_salaire, FPts)
+       filter(available == 1 & FPts > 30 & Position == "D") |>
+       arrange(pts_salaire, FPts) |>
+       select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
 )
 
+View(score_players(proj, 0.6, 0.15, 0.25))
+
+# Attribuer les joueurs pendant le draft
+id <- find_player(proj, "a", 1)
+proj %>% filter(ID == id) %>% select(Player, Team, Status, FPts)
+
+proj <- picked_player(proj, id)
 
 
+# Résultats du draft
+proj %>% 
+  filter(available == 0) %>% 
+  summarise(FPts = sum(FPts), npick = n(), .by = roster) %>% 
+  arrange(desc(FPts))
+
+
+
+# Dans mes 2 premiers picks, c all in ou un gros steal
+# Steals
+# Macklin Celebrini
+# Beckett Sennecke
+# Matthew Schaefer
+# Brandon Bussi (Goaler, pas garantie numero 1, projection Fantrax trop optimiste)
+
+### attaquants
+# a 160, on est a 42 points
+
+### goaler
+# a 32 G, on est a 42 points
+# Brandon Bussi 71 point est un steal
+# je pense pas que c'est pressant
+
+### Def
+# a 80 defenseurs, on est dans les 25 points
+# 
+# Matthew Schaefer
+# Shayne Gostisbehere
+# 
+# 6 defenseurs en haut de 70 points
+# 2 rentables en haut de 50 points
+
+
+# en bas de 100k / pts,
+# 6 def, dont 4 qui sortent du lot
+# 74 attaquants
+# 20 goalers
 
 
 #faire des buckets des joueurs

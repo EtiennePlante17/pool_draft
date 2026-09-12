@@ -15,7 +15,7 @@ merge_historique <- function(data, history_year = 3) {
     
     # Read file dynamically
     histo <- read.csv2(
-      file.path("data", year_draft, paste0("fantrax_exp_year", i, ".csv")),
+      file.path("data", year_draft, paste0("fantrax_exp_", year_draft - i, ".csv")),
       sep = ","
     )
     
