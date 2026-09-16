@@ -27,7 +27,14 @@ View(proj |>
        select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
 )
 
-View(score_players(proj, 0.6, 0.15, 0.25))
+#low budget
+View(proj |>
+       filter(available == 1 & FPts > 30 & an2 + an3 == 0 & salaire < 2000000) |>
+       arrange(pts_salaire, FPts) |>
+       select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
+)
+
+View(score_players(proj, 0.5, 0.35, 0.15)) # 177F, 30D $, 37G
 
 # Attribuer les joueurs pendant le draft
 id <- find_player(proj, "a", 1)
@@ -39,10 +46,20 @@ proj <- picked_player(proj, id)
 # Résultats du draft
 proj %>% 
   filter(available == 0) %>% 
-  summarise(FPts = sum(FPts), npick = n(), .by = roster) %>% 
+  summarise(FPts = sum(FPts), cash = masse_salariale - sum(salaire), npick = n(), .by = roster) %>% 
   arrange(desc(FPts))
 
+proj %>% filter(roster == "EP")
 
+to_pick <- score_players(proj, 0.5, 0.25, 0.25)
+
+proj <- picked_player(proj, to_pick$ID[1])
+
+1:10 (10)
+11 1
+12:18 6
+19:39
+40
 
 # Dans mes 2 premiers picks, c all in ou un gros steal
 # Steals

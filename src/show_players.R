@@ -3,26 +3,26 @@ library(dplyr)
 show_players <- function(data) {
   #defenseurs
   def <- (data |>
-         filter(available == 1 & Position == "D" & an1 > 20 &
-                  ((FPts > 60 & pts_salaire <150000) | 
+         filter(available == 1 & Position == "D" & (an1 > 20 | mean_histo > 40) &
+                  ((FPts > 50 & pts_salaire <175000) | 
                      (FPts > 20 & pts_salaire < 100000))) |>
-         select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
+         select(ID, Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
   )
   
   # Goalers
   goalies <- (data |>
-         filter(available == 1 & Position == "G" & an1 > 20 &
-                  ((FPts > 60 & pts_salaire <150000) | 
+         filter(available == 1 & Position == "G" & (an1 > 20 | mean_histo > 40) &
+                  ((FPts > 50 & pts_salaire <150000) | 
                      (FPts > 20 & pts_salaire < 100000))) |>
-         select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
+         select(ID, Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
   )
   
   ### Attaquants
   forwards <- (data |>
-         filter(available == 1 & Position == "F" & an1 > 20 &
-                  ((FPts > 60 & pts_salaire <150000) | 
+         filter(available == 1 & Position == "F" & (an1 > 20 | mean_histo > 40) &
+                  ((FPts > 50 & pts_salaire <175000) | 
                      (FPts > 20 & pts_salaire < 100000))) |>
-         select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
+         select(ID, Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
   )
   
   tot <- rbind(def, goalies, forwards) |> arrange(pts_salaire, FPts) 
