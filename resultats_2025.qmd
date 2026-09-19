@@ -260,3 +260,24 @@ ggplot(df_plot, aes(x = Position, y = Status, fill = ecart)) +
 ```
 
 Les attaquants optimisés de Mariève ont fait 122 points de plus que selon le projeté!
+
+# Corrélation entre les points projetés et les points réels
+
+```{r}
+tmp <- projections %>% filter(Status != "FA") %>% summarise(fpts_proj =sum(FPts) , .by = "Status") %>% mutate(rank_proj = rank(-fpts_proj, ties.method = "last")) %>% 
+  inner_join(points_reels %>% summarise(fpts_reel =sum(points_reels), 
+                                        .by = Status) %>% 
+               mutate(rank_reel = rank(-fpts_reel, ties.method = "last")),
+             by = "Status") %>% 
+  inner_join(points_opt %>% summarise(fpts_optim =sum(points_optimaux), 
+              .by = Status) %>% mutate(rank_optim = rank(-fpts_optim,
+              ties.method = "last")),
+             by = "Status")
+
+ggplot(tmp, aes(x=rank_reel, y=rank_proj))+geom_point()+geom_smooth(method = "lm") +   annotate("text", x = Inf, y = -Inf, label = paste0("r = ", round(cor(tmp$rank_reel, tmp$rank_proj, use = "complete.obs") , 3)),
+         hjust = 1.1, vjust = -1, size = 5) + theme_bw()
+
+ggplot(tmp, aes(x=fpts_reel, y=fpts_proj))+geom_point()+geom_smooth(method = "lm") +   annotate("text", x = Inf, y = -Inf, label = paste0("r = ", round(cor(tmp$fpts_reel, tmp$fpts_proj, use = "complete.obs") , 3)),
+         hjust = 1.1, vjust = -1, size = 5) + theme_bw()
+
+```

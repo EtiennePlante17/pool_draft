@@ -6,7 +6,7 @@ g_act <- 1
 g_bench <- 1
 masse_salariale <- 95000000
 
-draft <- c("WP","XR","ZC","LG","SF","CC","AR","PM","FG","RT","EP","MB","AP","JPL","VMS")
+draft <- c("EP","XR","PM","VMSO","SF","CC","LM","ZC","MB","LG","RT","JPL","AR","FG","WP","AP")
 
 draft_order <- rep(
   list(draft, rev(draft)),

@@ -16,17 +16,24 @@ projections <- read.csv2(file.path("data", year_draft, "fantrax_proj.csv"), sep 
 
 proj <- merge_historique(projections, history_year = 3)
 
-# Stats du draft
-pool_status(proj)
-roster_status(proj, "EP")
 
 # Afficher les joueurs
 View(proj |>
-       filter(available == 1 & FPts > 30 & Position == "D") |>
+       filter(available == 1 & FPts > 20 & Position == "D") |>
        arrange(pts_salaire, FPts) |>
        select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
 )
 
+View(proj |>
+       filter(available == 1 & salaire <=3340000 & Position == "G") |>
+       arrange(pts_salaire, FPts) |>
+       select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
+)
+View(proj |>
+       filter(available == 1 & salaire <=2590000 & Position == "D") |>
+       arrange(pts_salaire, FPts) |>
+       select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
+)
 #low budget
 View(proj |>
        filter(available == 1 & FPts > 30 & an2 + an3 == 0 & salaire < 2000000) |>
@@ -34,32 +41,44 @@ View(proj |>
        select(Player, Team, Position, Rookie, FPts, Salary, pts_salaire, an1, an2, an3, mean_histo)
 )
 
-View(score_players(proj, 0.5, 0.35, 0.15)) # 177F, 30D $, 37G
+find_player(proj, "evans", 1)
+proj %>% filter(Player == "Morgan Rielly") %>% select(Player, Team, Status, FPts)
+proj %>% filter(Player == "Frederik Andersen") %>% select(Player, Team, Status, FPts)
+proj %>% filter(Player == "Ilya Sorokin") %>% select(Player, Team, Status, FPts)
+proj %>% filter(Player == "Ryker Evans") %>% select(Player, Team, Status, FPts)
+
+
+View(score_players(proj, 0.35, 0.5, 0.15))# 177F, 30D $, 37G
 
 # Attribuer les joueurs pendant le draft
-id <- find_player(proj, "a", 1)
+id <- find_player(proj, "mcd", 1)
 proj %>% filter(ID == id) %>% select(Player, Team, Status, FPts)
 
+#Assigner le joueur
 proj <- picked_player(proj, id)
 
+# Stats du draft
+pool_status(proj)
+roster_status(proj, "LG")
+proj %>% filter(roster == "EP")
 
 # Résultats du draft
-proj %>% 
+stock_res <- proj %>% 
   filter(available == 0) %>% 
   summarise(FPts = sum(FPts), cash = masse_salariale - sum(salaire), npick = n(), .by = roster) %>% 
   arrange(desc(FPts))
+stock_res
 
-proj %>% filter(roster == "EP")
 
-to_pick <- score_players(proj, 0.5, 0.25, 0.25)
-
-proj <- picked_player(proj, to_pick$ID[1])
-
-1:10 (10)
-11 1
-12:18 6
-19:39
-40
+# to_pick <- score_players(proj, 0.5, 0.25, 0.25)
+# 
+# proj <- picked_player(proj, to_pick$ID[1])
+# 
+# 1:10 (10)
+# 11 1
+# 12:18 6
+# 19:39
+# 40
 
 # Dans mes 2 premiers picks, c all in ou un gros steal
 # Steals
