@@ -14,7 +14,8 @@ source(file.path("params", year_draft, "draft_rules.R"))
 projections <- read.csv2(file.path("data", year_draft, "fantrax_proj.csv"), sep = ",") |>
   mutate(salaire = as.numeric(gsub(",", "", Salary)))
 
-proj <- merge_historique(projections, history_year = 3)
+proj <- merge_historique(projections, history_year = 3) %>% 
+  mutate(Round = NA, Pick = NA, Ov.Pick = NA)
 
 
 # Afficher les joueurs
@@ -48,7 +49,7 @@ proj %>% filter(Player == "Ilya Sorokin") %>% select(Player, Team, Status, FPts)
 proj %>% filter(Player == "Ryker Evans") %>% select(Player, Team, Status, FPts)
 
 
-View(score_players(proj, 0.35, 0.5, 0.15))# 177F, 30D $, 37G
+View(score_players(proj, 0.5, 0.3, 0.2))# 177F, 30D $, 37G
 
 # Attribuer les joueurs pendant le draft
 id <- find_player(proj, "mcd", 1)
@@ -59,7 +60,7 @@ proj <- picked_player(proj, id)
 
 # Stats du draft
 pool_status(proj)
-roster_status(proj, "LG")
+roster_status(proj, "EP")
 proj %>% filter(roster == "EP")
 
 # Résultats du draft
@@ -70,12 +71,49 @@ stock_res <- proj %>%
 stock_res
 
 
+
+View(score_players(proj, 0.5, 0.25, 0.15, 0.1, "EP"))
+# draft auto
+proj <- merge_historique(projections, history_year = 3) %>% 
+  mutate(Round = NA, Pick = NA, Ov.Pick = NA)
+
+for (i in 1:(length(draft)*n_tot)) {
+proj <- picked_player(proj, score_players(proj, 0.5, 0.2, 0.2, 0.1, 
+                                          draft_order[i])$ID[1])
+}
+
+saveRDS(proj %>% filter(available == 0), file = file.path(year_draft, "draft_simul.rds"))
+
+
+proj %>% 
+  filter(available == 0) %>% 
+  summarise(FPts = sum(FPts), cash = masse_salariale - sum(salaire), npick = n(), .by = Status) %>% 
+  arrange(desc(FPts))
+
+# Meilleur optim: 
+proj %>% filter(available == 0) %>% summarise(FPts = sum(FPts)) #14618
+
+pool_status(proj)
+roster_status(proj, "EP")
+proj %>% filter(roster == "EP")
+
+# amélioration
+# score besoin priorise les G qui ne fonctionnent pas
+# je pense que pourrait regarder un nombre selon les autres scores pour prioriser si y'en a bcp ou pas
+
+# Ajouter une composition de cout d'attendre, score meilleur def vs score def next pick
+# pourrait commencer par hypothese que tout le monde prend la position
+
+# Vider le cash au lieu de hold
+
+# Tester si je suis seul a drafter
+
 # to_pick <- score_players(proj, 0.5, 0.25, 0.25)
 # 
 # proj <- picked_player(proj, to_pick$ID[1])
 # 
 # 1:10 (10)
-# 11 1
+# 11 1s
 # 12:18 6
 # 19:39
 # 40

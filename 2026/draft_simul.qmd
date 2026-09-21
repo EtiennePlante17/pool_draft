@@ -1,0 +1,859 @@
+---
+title: "Résultats de la simulation du draft"
+format:
+  html:
+    embed-resources: true
+execute:
+  echo: false
+  message: false
+---
+
+::: callout-tip
+"*Luck favours the brave and the well prepared.*"
+
+\- Mike the Potentiator
+:::
+
+```{r, echo=FALSE}
+#| message: false
+year_draft <- 2026
+
+library(dplyr)
+library(purrr)
+library(ggplot2)
+library(tidyr)
+library(plotly)
+library(scales)
+library(here)
+
+i_am("2026/draft_simul.qmd")
+source(here(file.path("params", year_draft, "draft_rules.R")))
+
+roster <- readRDS(here(file.path(year_draft, "draft_simul.rds")))
+
+roster <- roster %>%
+  group_by(Status, Position) %>%
+  arrange(desc(FPts), .by_group = TRUE) %>%
+  mutate(
+    nb_act = case_when(
+      Position == "F" ~ f_act,
+      Position == "D" ~ d_act,
+      Position == "G" ~ g_act
+    ),
+    bench = if_else(row_number() > nb_act, 1, 0)
+  ) %>%
+  ungroup() %>%
+  select(-nb_act)
+
+```
+
+
+## Cumul de la masse salariale lors du draft
+```{r, echo=FALSE}
+#| message: false
+# Ordre des participants selon le draft
+ordre_status <- draft
+
+roster_plot <- roster %>%
+  mutate(
+    Salary = as.numeric(gsub(",", "", Salary)),
+    Ov.Pick = as.numeric(Ov.Pick),
+    Status = factor(Status, levels = ordre_status)
+  ) %>%
+  arrange(Status, Ov.Pick) %>%
+  mutate(
+    groupe_pick = interaction(Status, Ov.Pick, drop = TRUE)
+  )
+
+p <- ggplot(
+  roster_plot,
+  aes(
+    x = Status,
+    y = Salary,
+    fill = Position,
+    group = groupe_pick,
+    text = paste0(
+      "<b>", Player, "</b>",
+      "<br>Prix : ", dollar(Salary),
+      "<br>FPts : ", comma(FPts)
+    )
+  )
+) +
+  geom_col(
+    width = 0.65,
+    colour = "white",
+    linewidth = 0.5,
+    position = position_stack(reverse = TRUE)
+  ) +
+  scale_y_continuous(
+    labels = dollar_format(
+      scale = 1e-6,
+      suffix = " M$"
+    ),
+    expand = expansion(mult = c(0, 0.05))
+  ) +
+  labs(
+    x = NULL,
+    y = "Masse salariale"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(
+      face = "bold",
+      size = 16
+    ),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "none",
+    axis.text.x = element_text(
+      face = "bold",
+      size = 11
+    )
+  )
+
+ggplotly(p, tooltip = "text")
+```
+
+## Ordre des points projetés
+
+```{r, echo=FALSE}
+#| message: false
+fpts_status <- roster %>%
+  mutate(
+    Statut = if_else(bench == 1, "Banc", "Actif")
+  ) %>%
+  group_by(Status, Position, Statut) %>%
+  summarise(
+    FPts = sum(FPts, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  group_by(Status) %>%
+  mutate(
+    FPts_actif = sum(FPts[Statut == "Actif"]),
+    FPts_banc = sum(FPts[Statut == "Banc"]),
+    FPts_total = FPts_actif + FPts_banc
+  ) %>%
+  filter(Statut == "Actif") %>%
+  mutate(
+    pct_actif = FPts / FPts_actif
+  ) %>%
+  ungroup() %>%
+  mutate(
+   Status = reorder(Status, -FPts_actif)
+  )
+
+p <- ggplot(
+  fpts_status,
+  aes(
+    x = Status,
+    y = FPts,
+    fill = Position,
+    text = paste0(
+      "Status : ", Status,
+      "<br>Position : ", Position,
+      "<br>FPts : ", comma(FPts),
+      "<br>Part du total actif : ", percent(pct_actif, accuracy = 0.1),
+      "<br><br>Total actif : ", comma(FPts_actif),
+      "<br>Total banc : ", comma(FPts_banc),
+      "<br>Total équipe : ", comma(FPts_total)
+    )
+  )
+) +
+  geom_col(
+    width = 0.7,
+    colour = "white",
+    linewidth = 0.5
+  ) +
+  geom_text(
+    aes(
+      label = if_else(
+        pct_actif >= 0.05,
+        percent(pct_actif, accuracy = 1),
+        ""
+      )
+    ),
+    position = position_stack(vjust = 0.5),
+    colour = "black",
+    fontface = "bold",
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = comma,
+    expand = expansion(mult = c(0, 0.05))
+  ) +
+  labs(
+    x = NULL,
+    y = "FPts",
+    fill = "Position"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(
+      face = "bold",
+      size = 16
+    ),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "top",
+    axis.text.x = element_text(
+      face = "bold",
+      size = 11
+    )
+  )
+
+ggplotly(
+  p,
+  tooltip = "text"
+)
+
+```
+
+## Points projetées selon la masse salariale
+
+```{r, echo=FALSE}
+#| message: false
+fpts_salaire <- roster %>%
+  group_by(Status, Position) %>%
+  summarise(
+    FPts = sum(FPts, na.rm = TRUE),
+    masse_salariale = sum(salaire, na.rm = TRUE),
+    nb_joueurs = n(),
+    .groups = "drop"
+  )
+
+p <- ggplot(
+  fpts_salaire,
+  aes(
+    x = masse_salariale,
+    y = FPts,
+    colour = Position,
+    text = paste0(
+      "Status : ", Status,
+      "<br>Position : ", Position,
+      "<br>FPts : ", comma(FPts),
+      "<br>Masse salariale : $", comma(masse_salariale),
+      "<br>Nombre de joueurs : ", nb_joueurs,
+      "<br>FPts / $M : ",
+      round(FPts / masse_salariale * 1000000, 1)
+    )
+  )
+) +
+  geom_point(
+    size = 3,
+    alpha = 0.8
+  ) +
+  scale_x_continuous(
+    labels = dollar_format(scale = 1e-6, suffix = " M$"),
+    expand = expansion(mult = 0.05)
+  ) +
+  scale_y_continuous(
+    labels = comma,
+    expand = expansion(mult = 0.05)
+  ) +
+  labs(
+    x = "Masse salariale",
+    y = "FPts projetés",
+    colour = "Position"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    panel.grid.minor = element_blank(),
+    legend.position = "top"
+  )
+
+ggplotly(
+  p,
+  tooltip = "text"
+)
+```
+
+## Points par salaire moyen
+
+```{r, echo=FALSE}
+#| message: false
+fpts_salaire <- roster %>%
+  group_by(Status, Position) %>%
+  summarise(
+    FPts = mean(FPts, na.rm = TRUE),
+    masse_salariale = mean(salaire, na.rm = TRUE),
+    nb_joueurs = n(),
+    .groups = "drop"
+  )
+
+# Couleurs des positions
+couleurs_position <- c(
+  "F" = "#1f77b4",
+  "D" = "#ff7f0e",
+  "G" = "#2ca02c"
+)
+
+# Liste des Status
+statuses <- unique(fpts_salaire$Status)
+
+# Création du graphique
+p <- plot_ly()
+
+for (status in statuses) {
+  
+  data_status <- fpts_salaire %>%
+    filter(Status == status)
+  
+  p <- p %>%
+    add_markers(
+      data = data_status,
+      x = ~masse_salariale,
+      y = ~FPts,
+      marker = list(
+        size = 8,
+        color = couleurs_position[as.character(data_status$Position)]
+      ),
+      text = ~paste0(
+        "Status : ", Status,
+        "<br>Position : ", Position,
+        "<br>FPts moyens : ", round(FPts, 1),
+        "<br>Salaire moyen : $", comma(round(masse_salariale)),
+        "<br>Nombre de joueurs : ", nb_joueurs,
+        "<br>FPts / $M : ",
+        round(FPts / masse_salariale * 1000000, 1)
+      ),
+      hoverinfo = "text",
+      showlegend = FALSE
+    )
+}
+
+# Bouton pour afficher tous les Status
+boutons <- list(
+  list(
+    method = "restyle",
+    args = list(
+      "visible",
+      rep(TRUE, length(statuses))
+    ),
+    label = "Tous"
+  )
+)
+
+# Bouton individuel pour chaque Status
+for (i in seq_along(statuses)) {
+  
+  visible <- rep(FALSE, length(statuses))
+  visible[i] <- TRUE
+  
+  boutons[[i + 1]] <- list(
+    method = "restyle",
+    args = list(
+      "visible",
+      visible
+    ),
+    label = statuses[i]
+  )
+}
+
+p <- p %>%
+  layout(
+    title = "FPts moyens en fonction du salaire moyen",
+    
+    xaxis = list(
+      title = "Salaire moyen",
+      tickformat = "$,.2s"
+    ),
+    
+    yaxis = list(
+      title = "FPts moyens",
+      tickformat = ","
+    ),
+    
+    updatemenus = list(
+      list(
+        type = "buttons",
+        direction = "right",
+        buttons = boutons,
+        x = 0,
+        y = 1.15,
+        xanchor = "left",
+        yanchor = "top"
+      )
+    ),
+    
+    annotations = list(
+      list(
+        text = "Status :",
+        x = 0,
+        y = 1.21,
+        xref = "paper",
+        yref = "paper",
+        showarrow = FALSE,
+        xanchor = "left"
+      )
+    )
+  )
+
+p
+```
+
+## Rang projeté selon l'ordre du repêchage
+```{r, echo=FALSE}
+#| message: false
+rang_projete <- roster %>%
+  filter(bench == 0) %>%
+  group_by(Status) %>%
+  summarise(
+    FPts_actif = sum(FPts, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(FPts_actif)) %>%
+  mutate(
+    rang_projete = row_number(),
+    ordre_draft = match(Status, draft)
+  )
+
+# Graphique
+p <- ggplot(
+  rang_projete,
+  aes(
+    x = ordre_draft,
+    y = rang_projete,
+    text = paste0(
+      "Status : ", Status,
+      "<br>Ordre draft : ", ordre_draft,
+      "<br>Rang projeté : ", rang_projete,
+      "<br>FPts actifs : ", comma(FPts_actif)
+    )
+  )
+) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed",
+    colour = "grey60"
+  ) +
+  geom_point(
+    size = 3
+  ) +
+  scale_x_continuous(
+    breaks = 1:16,
+    limits = c(1, 16)
+  ) +
+  scale_y_reverse(
+    breaks = 1:16,
+    limits = c(16, 1)
+  ) +
+  labs(
+    x = "Ordre dans le draft",
+    y = "Rang projeté"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(
+      face = "bold",
+      size = 16
+    ),
+    panel.grid.minor = element_blank()
+  )
+
+ggplotly(
+  p,
+  tooltip = "text"
+)
+```
+
+## Rang projeté selon la masse salariale par position
+```{r, echo=FALSE}
+#| message: false
+# ============================================================
+# 1. RANG PROJETÉ DE CHAQUE STATUS
+# ============================================================
+
+rang_projete <- roster %>%
+  filter(bench == 0) %>%
+  group_by(Status) %>%
+  summarise(
+    FPts_actif = sum(FPts, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(FPts_actif)) %>%
+  mutate(
+    rang_projete = row_number()
+  )
+
+
+# ============================================================
+# 2. MASSE SALARIALE PAR POSITION
+# ============================================================
+
+analyse_priorisation <- roster %>%
+  group_by(Status, Position) %>%
+  summarise(
+    masse_salariale = sum(salaire, na.rm = TRUE),
+    FPts = sum(FPts, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  group_by(Status) %>%
+  mutate(
+    masse_salariale_totale = sum(masse_salariale),
+    pct_salaire = masse_salariale / masse_salariale_totale
+  ) %>%
+  ungroup()
+
+
+# ============================================================
+# 3. METTRE F / D / G EN COLONNES
+# ============================================================
+
+analyse_priorisation <- analyse_priorisation %>%
+  select(
+    Status,
+    Position,
+    pct_salaire
+  ) %>%
+  tidyr::pivot_wider(
+    names_from = Position,
+    values_from = pct_salaire,
+    values_fill = 0,
+    names_prefix = "pct_"
+  ) %>%
+  left_join(
+    rang_projete,
+    by = "Status"
+  )
+
+
+# ============================================================
+# 4. POSITION PRIORISÉE
+# ============================================================
+
+analyse_priorisation <- analyse_priorisation %>%
+  mutate(
+    Position_priorisee = case_when(
+      pct_F >= pct_D & pct_F >= pct_G ~ "F",
+      pct_D >= pct_F & pct_D >= pct_G ~ "D",
+      TRUE ~ "G"
+    )
+  )
+
+
+# ============================================================
+# 5. CORRÉLATIONS
+# ============================================================
+
+cor_F <- cor(
+  analyse_priorisation$rang_projete,
+  analyse_priorisation$pct_F,
+  use = "complete.obs"
+)
+
+cor_D <- cor(
+  analyse_priorisation$rang_projete,
+  analyse_priorisation$pct_D,
+  use = "complete.obs"
+)
+
+cor_G <- cor(
+  analyse_priorisation$rang_projete,
+  analyse_priorisation$pct_G,
+  use = "complete.obs"
+)
+
+correlations <- data.frame(
+  Position = c("F", "D", "G"),
+  Correlation = c(
+    cor_F,
+    cor_D,
+    cor_G
+  )
+)
+
+print(correlations)
+
+
+# ============================================================
+# 6. TABLEAU FINAL
+# ============================================================
+
+priorisation <- analyse_priorisation %>%
+  select(
+    Status,
+    rang_projete,
+    FPts_actif,
+    pct_F,
+    pct_D,
+    pct_G,
+    Position_priorisee
+  ) %>%
+  arrange(rang_projete)
+
+# ============================================================
+# 7. GRAPHIQUE
+# ============================================================
+
+priorisation_long <- priorisation %>%
+  tidyr::pivot_longer(
+    cols = c(pct_F, pct_D, pct_G),
+    names_to = "Position",
+    values_to = "pct_salaire"
+  ) %>%
+  mutate(
+    Position = recode(
+      Position,
+      pct_F = "F",
+      pct_D = "D",
+      pct_G = "G"
+    )
+  )
+
+
+p <- ggplot(
+  priorisation_long,
+  aes(
+    x = rang_projete,
+    y = pct_salaire,
+    colour = Position,
+    text = paste0(
+      "Status : ", Status,
+      "<br>Rang projeté : ", rang_projete,
+      "<br>Position : ", Position,
+      "<br>Masse salariale : ",
+      percent(pct_salaire, accuracy = 0.1),
+      "<br>Position priorisée : ",
+      Position_priorisee,
+      "<br>FPts actifs : ",
+      comma(FPts_actif)
+    )
+  )
+) +
+  geom_point(
+    size = 3
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    linetype = "dashed"
+  ) +
+  scale_x_continuous(
+    breaks = 1:max(priorisation$rang_projete),
+    limits = c(1, max(priorisation$rang_projete))
+  ) +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, 1)
+  ) +
+  labs(
+    x = "Rang projeté",
+    y = "Part de la masse salariale",
+    colour = "Position"
+  ) +
+  theme_minimal(
+    base_size = 12
+  ) +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position = "top"
+  )
+
+
+ggplotly(
+  p,
+  tooltip = "text"
+)
+```
+
+## Rang projeté selon la priorisation de la position dans l'ordre du repêchage
+> Un overall pick median plus bas signifie que cette personne a priorisée cette position dans l'ordre de son repêchage.
+
+```{r, echo=FALSE}
+#| message: false
+# ============================================================
+# 1. RANG PROJETÉ
+# ============================================================
+
+rang_projete <- roster %>%
+  filter(bench == 0) %>%
+  group_by(Status) %>%
+  summarise(
+    FPts_actif = sum(FPts, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(FPts_actif)) %>%
+  mutate(
+    rang_projete = row_number()
+  )
+
+
+# ============================================================
+# 2. PRIORISATION DES POSITIONS
+#    Basée uniquement sur l'Overall Pick
+# ============================================================
+
+priorisation_position <- roster %>%
+  group_by(Status, Position) %>%
+  summarise(
+    Ov_Pick_median = median(Ov.Pick, na.rm = TRUE),
+    Ov_Pick_moyen = mean(Ov.Pick, na.rm = TRUE),
+    nb_joueurs = n(),
+    .groups = "drop"
+  ) %>%
+  left_join(
+    rang_projete,
+    by = "Status"
+  )
+
+
+# ============================================================
+# 3. CORRÉLATIONS
+# ============================================================
+
+correlations <- priorisation_position %>%
+  group_by(Position) %>%
+  summarise(
+    Correlation = cor(
+      rang_projete,
+      Ov_Pick_median,
+      use = "complete.obs"
+    ),
+    .groups = "drop"
+  )
+
+print(correlations)
+
+
+# ============================================================
+# 4. GRAPHIQUE
+# ============================================================
+
+p <- ggplot(
+  priorisation_position,
+  aes(
+    x = rang_projete,
+    y = Ov_Pick_median,
+    colour = Position,
+    text = paste0(
+      "Status : ", Status,
+      "<br>Rang projeté : ", rang_projete,
+      "<br>Position : ", Position,
+      "<br>Pick médian : ", Ov_Pick_median,
+      "<br>Pick moyen : ", round(Ov_Pick_moyen, 1),
+      "<br>Nombre de joueurs : ", nb_joueurs,
+      "<br>FPts actifs : ", comma(FPts_actif)
+    )
+  )
+) +
+  geom_point(
+    size = 3
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    linetype = "dashed"
+  ) +
+  scale_x_continuous(
+    breaks = 1:max(priorisation_position$rang_projete),
+    limits = c(1, max(priorisation_position$rang_projete))
+  ) +
+  scale_y_continuous(
+    labels = comma,
+    expand = expansion(mult = 0.05)
+  ) +
+  labs(
+    x = "Rang projeté",
+    y = "Overall Pick médian",
+    colour = "Position"
+  ) +
+  theme_minimal(
+    base_size = 12
+  ) +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position = "top"
+  )
+
+
+ggplotly(
+  p,
+  tooltip = "text"
+)
+```
+
+## Points projetés en heatmap
+
+```{r, echo=FALSE}
+#| message: false
+# ============================================================
+# 5. HEATMAP — ÉCART DE FPts PAR RAPPORT À LA MOYENNE
+# ============================================================
+
+fpts_heatmap <- roster %>%
+  filter(bench == 0) %>%
+  group_by(Status, Position) %>%
+  summarise(
+    FPts = sum(FPts, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  group_by(Position) %>%
+  mutate(
+    FPts_moyen = mean(FPts, na.rm = TRUE),
+    FPts_ecart = FPts - FPts_moyen
+  ) %>%
+  ungroup() %>%
+  mutate(
+    Status = factor(
+      Status,
+      levels = draft
+    ),
+    Position = factor(
+      Position,
+      levels = c("F", "D", "G")
+    )
+  )
+
+
+p2 <- ggplot(
+  fpts_heatmap,
+  aes(
+    x = Status,
+    y = Position,
+    fill = FPts_ecart,
+    text = paste0(
+      "Status : ", Status,
+      "<br>Position : ", Position,
+      "<br>FPts : ", comma(round(FPts)),
+      "<br>Moyenne : ", comma(round(FPts_moyen)),
+      "<br>Écart : ", comma(round(FPts_ecart))
+    )
+  )
+) +
+  geom_tile(
+    colour = "white",
+    linewidth = 0.5
+  ) +
+  geom_text(
+    aes(
+      label = ifelse(
+        FPts_ecart >= 0,
+        paste0("+", comma(round(FPts_ecart))),
+        comma(round(FPts_ecart))
+      )
+    ),
+    size = 3.5
+  ) +
+  scale_fill_gradient2(
+    midpoint = 0,
+    labels = comma
+  ) +
+  labs(
+    x = "Status",
+    y = "Position",
+    fill = "Écart vs moyenne"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid = element_blank(),
+    legend.position = "right"
+  )
+
+
+ggplotly(
+  p2,
+  tooltip = "text"
+)
+```

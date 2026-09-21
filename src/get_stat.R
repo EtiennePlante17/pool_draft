@@ -2,7 +2,7 @@ library(dplyr)
 
 roster_status <- function(data, participant) {
   data |>
-    filter(roster == participant) |>
+    filter(Status == participant) |>
     summarise(salaire_restant = masse_salariale - sum(salaire),
              n_F = sum(Position == "F", na.rm = TRUE),
              n_D = sum(Position == "D", na.rm = TRUE),

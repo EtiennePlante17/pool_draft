@@ -10,6 +10,9 @@ picked_player <- function(data, id_player) {
   
   data |>
     mutate(available = if_else(ID == id_player, 0, available),
-           roster = if_else(ID == id_player, draft_order[pick_number], roster))
+           Status = if_else(ID == id_player, draft_order[pick_number], Status),
+           Round = if_else(ID == id_player, ceiling(pick_number / 16), Round),
+           Pick = if_else(ID == id_player, ((pick_number - 1) %% 16) + 1, Pick),
+           Ov.Pick = if_else(ID == id_player, pick_number, Ov.Pick))
   
 }
