@@ -7,6 +7,7 @@ source("src/picked_player.R")
 source("src/get_stat.R")
 source("src/get_merge_historique.R")
 source("src/show_players.R")
+source("src/score_players.R")
 # Params
 source(file.path("params", year_draft, "draft_rules.R"))
 
@@ -17,8 +18,47 @@ projections <- read.csv2(file.path("data", year_draft, "fantrax_proj.csv"), sep 
 proj <- merge_historique(projections, history_year = 3) %>% 
   mutate(Round = NA, Pick = NA, Ov.Pick = NA)
 
+# draft auto
 
-# Afficher les joueurs
+for (i in 1:(length(draft)*n_tot)) {
+  proj <- picked_player(proj, score_players(proj, 0.6, 0.2, 0.2, 0.25, 
+                                            draft_order[i])$ID[1])
+}
+
+View(score_players(proj, 0.6, 0.2, 0.2, 0.25))
+
+for (i in 1:(length(draft)*1)) {
+  proj <- picked_player(proj, score_players(proj, 0.5, 0.2, 0.2, 0.1, 
+                                            draft_order[i])$ID[1])
+}
+
+data <- proj
+participant <- "EP"
+
+saveRDS(proj %>% filter(available == 0), file = file.path(year_draft, "draft_simul.rds"))
+
+
+proj %>% 
+  filter(available == 0) %>% 
+  summarise(FPts = sum(FPts), cash = masse_salariale - sum(salaire), npick = n(), .by = Status) %>% 
+  arrange(desc(FPts))
+
+# Meilleur optim: 
+proj %>% filter(available == 0) %>% summarise(FPts = sum(FPts)) #14717
+
+pool_status(proj)
+roster_status(proj, "EP")
+proj %>% filter(Status == "EP") %>%  arrange(Ov.Pick)
+
+# optim individuel: 1430
+# optim 2: 1310 +1291 = 2601
+
+# si ma masse moyenne restante élevé, plus de poids aux FPts versus cout
+# défavoriser une position qui reste juste le banc
+
+# amélioration: calibration des poids
+
+### Afficher les joueurs
 View(proj |>
        filter(available == 1 & FPts > 20 & Position == "D") |>
        arrange(pts_salaire, FPts) |>
@@ -73,50 +113,6 @@ stock_res
 
 
 View(score_players(proj, 0.5, 0.25, 0.15, 0.1, "EP"))
-# draft auto
-proj <- merge_historique(projections, history_year = 3) %>% 
-  mutate(Round = NA, Pick = NA, Ov.Pick = NA)
-
-for (i in 1:(length(draft)*n_tot)) {
-proj <- picked_player(proj, score_players(proj, 0.5, 0.2, 0.2, 0.1, 
-                                          draft_order[i])$ID[1])
-}
-
-saveRDS(proj %>% filter(available == 0), file = file.path(year_draft, "draft_simul.rds"))
-
-
-proj %>% 
-  filter(available == 0) %>% 
-  summarise(FPts = sum(FPts), cash = masse_salariale - sum(salaire), npick = n(), .by = Status) %>% 
-  arrange(desc(FPts))
-
-# Meilleur optim: 
-proj %>% filter(available == 0) %>% summarise(FPts = sum(FPts)) #14618
-
-pool_status(proj)
-roster_status(proj, "EP")
-proj %>% filter(roster == "EP")
-
-# amélioration
-# score besoin priorise les G qui ne fonctionnent pas
-# je pense que pourrait regarder un nombre selon les autres scores pour prioriser si y'en a bcp ou pas
-
-# Ajouter une composition de cout d'attendre, score meilleur def vs score def next pick
-# pourrait commencer par hypothese que tout le monde prend la position
-
-# Vider le cash au lieu de hold
-
-# Tester si je suis seul a drafter
-
-# to_pick <- score_players(proj, 0.5, 0.25, 0.25)
-# 
-# proj <- picked_player(proj, to_pick$ID[1])
-# 
-# 1:10 (10)
-# 11 1s
-# 12:18 6
-# 19:39
-# 40
 
 # Dans mes 2 premiers picks, c all in ou un gros steal
 # Steals
