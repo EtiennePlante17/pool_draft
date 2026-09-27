@@ -2,7 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-*.rds
 *.html
 _site/
 /.quarto/
