@@ -21,11 +21,11 @@ proj <- merge_historique(projections, history_year = 3) %>%
 # draft auto
 
 for (i in 1:(length(draft)*n_tot)) {
-  proj <- picked_player(proj, score_players(proj, 0.6, 0.2, 0.2, 0.25, 
+  proj <- picked_player(proj, score_players(proj, 0.3, 0.1, .6, 0.1, 
                                             draft_order[i])$ID[1])
 }
 
-View(score_players(proj, 0.6, 0.2, 0.2, 0.25))
+View(score_players(proj, 0.3, 0.1, 0.6, 0.2))
 
 for (i in 1:(length(draft)*1)) {
   proj <- picked_player(proj, score_players(proj, 0.5, 0.2, 0.2, 0.1, 
@@ -44,19 +44,54 @@ proj %>%
   arrange(desc(FPts))
 
 # Meilleur optim: 
-proj %>% filter(available == 0) %>% summarise(FPts = sum(FPts)) #14717
+proj %>% filter(available == 0) %>% summarise(FPts = sum(FPts)) #14730
 
 pool_status(proj)
 roster_status(proj, "EP")
 proj %>% filter(Status == "EP") %>%  arrange(Ov.Pick)
 
-# optim individuel: 1430
-# optim 2: 1310 +1291 = 2601
+# Recréer le draft
+dr <- read.csv2((file.path("data", year_draft, "draft_results.csv")), sep = ",")
+
+dv2 <- proj
+
+for (i in 1:31) {
+  dv2 <- picked_player(dv2, (dr %>% filter(Ov.Pick == i))$Player.ID)
+}
+
+View(score_players(dv2, 0.6, 0.2, 0.2, 0.1))
+
+for (i in 32:63) {
+  dv2 <- picked_player(dv2, (dr %>% filter(Ov.Pick == i))$Player.ID)
+}
+
+View(score_players(dv2, 0.6, 0.2, 0.2, 0.1))
+
+for (i in 64:95) {
+  dv2 <- picked_player(dv2, (dr %>% filter(Ov.Pick == i))$Player.ID)
+}
+
+
+
+View(score_players(dv2, 0.6, 0.2, 0.2, 0.1))
+
+# optim individuel: 1455
+# optim 2: 1321 +1311 = 2632
 
 # si ma masse moyenne restante élevé, plus de poids aux FPts versus cout
-# défavoriser une position qui reste juste le banc
+# mettre une regle pour defavoriser bcp d'argents sur 2 goalers
 
 # amélioration: calibration des poids
+
+# considération de combien de points d eplus j'ai pour le meme salaire dans une autre position
+
+
+# voir ce que m'aurait dit mon algo tout au long du draft
+
+# sortir le score de rentabilité dans un score préfait de points et couts
+
+# Simuler si prend F, D, G en fonction des scores du meilleur par position et plus de prob si besoin de plus
+# les gens vont probablement drafter plus equitablement
 
 ### Afficher les joueurs
 View(proj |>

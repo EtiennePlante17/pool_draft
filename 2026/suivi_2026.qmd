@@ -1,0 +1,219 @@
+---
+title: "Suivi des résultats 2026"
+format:
+  html:
+    embed-resources: true
+execute:
+  echo: false
+  message: false
+---
+
+```{r, echo=FALSE}
+#| message: false
+
+week_obs <- 2
+week_tot <- 28
+year_draft <- 2026
+
+library(dplyr)
+library(purrr)
+library(ggplot2)
+library(tidyr)
+library(plotly)
+library(scales)
+library(here)
+library(gt)
+
+i_am("2026/suivi_2026.qmd")
+
+# params de draft
+source(here(file.path("params", year_draft, "draft_rules.R")))
+# fonctions
+source(here("src/read_periods.R"))
+source(here("src/find_optimal_players.R"))
+source(here("src/prep_data_graph.R"))
+# graphiques
+source(here("src/graph_coach_perf.R"))
+source(here("src/graph_hm_pos.R"))
+source(here("src/graph_cor.R"))
+source(here("src/graph_exp_proj.R"))
+
+projections <- read_periods_proj(year_draft, week_tot) %>%
+  find_optimal(c("Status", "Position", "Period"), "optimal_proj")
+  
+reel <- read_periods_reel(year_draft, week_obs) %>%
+  find_optimal(c("Status", "Position", "Period"), "optimal_reel")
+```
+
+## Points cumulatifs et hebdomadaire
+```{r}
+data_rang <- reel %>%
+  filter(Roster.Status == "Active") %>%
+  mutate(
+    points_prec = ifelse(Period < week_obs, FPts, 0),
+    points_semaine = ifelse(Period == week_obs, FPts, 0)
+  ) %>%
+  summarise(
+    points_prec = sum(points_prec),
+    points_semaine = sum(points_semaine),
+    .by = "Status"
+  ) %>%
+  mutate(
+    points_cumul = points_prec + points_semaine,
+    rang_prec = rank(-points_prec, ties.method = "min"),
+    rang = rank(-points_cumul, ties.method = "min"),
+    ecart_rang = rang - rang_prec,
+    mouvement = case_when(
+      ecart_rang < 0 ~ paste0("▲ ", abs(ecart_rang)),
+      ecart_rang > 0 ~ paste0("▼ ", ecart_rang),
+      TRUE ~ "—"
+    )
+  ) %>%
+  arrange(rang) %>%
+  select(
+    Rang = rang,
+    Status,
+    `Points semaine` = points_semaine,
+    `Points cumulés` = points_cumul,
+    `Mouvement` = mouvement
+  )
+
+data_rang %>%
+  gt() %>%
+  tab_header(
+    title = paste0("Classement après la semaine ", week_obs)
+  ) %>%
+  cols_label(
+    Rang = "Rang",
+    Status = "Équipe",
+    `Points semaine` = "Cette semaine",
+    `Points cumulés` = "Total",
+    Mouvement = "Mouvement"
+  ) %>%
+  fmt_number(
+    columns = c(`Points semaine`, `Points cumulés`),
+    decimals = 0
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = c(Rang, Status, Mouvement)
+  ) %>%
+  cols_align(
+    align = "right",
+    columns = c(`Points semaine`, `Points cumulés`)
+  ) %>%
+  
+  # Équipe et total en gras
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(
+      columns = c(Rang, Status, `Points cumulés`)
+    )
+  ) %>%
+  
+  # Remontée au classement = vert
+  tab_style(
+    style = list(
+      cell_text(
+        color = "#198754",
+        weight = "bold"
+      ),
+      cell_fill(color = "#E8F5E9")
+    ),
+    locations = cells_body(
+      columns = Mouvement,
+      rows = grepl("▲", Mouvement)
+    )
+  ) %>%
+  
+  # Descente au classement = rouge
+  tab_style(
+    style = list(
+      cell_text(
+        color = "#DC3545",
+        weight = "bold"
+      ),
+      cell_fill(color = "#FDECEC")
+    ),
+    locations = cells_body(
+      columns = Mouvement,
+      rows = grepl("▼", Mouvement)
+    )
+  ) %>%
+  
+  # En-tête
+  tab_style(
+    style = list(
+      cell_fill(color = "#2C3E50"),
+      cell_text(
+        color = "white",
+        weight = "bold"
+      )
+    ),
+    locations = cells_column_labels()
+  ) %>%
+  
+  # Mettre le leader légèrement en évidence
+  tab_style(
+    style = cell_fill(color = "#F5F5F5"),
+    locations = cells_body(
+      rows = Rang == 1
+    )
+  ) %>%
+  
+  tab_options(
+    table.font.size = px(14),
+    data_row.padding = px(6),
+    heading.align = "left",
+    column_labels.background.color = "#2C3E50"
+  )
+```
+
+## Expérience à date et points projetés
+
+```{r}
+
+# pour les données combinées d'expérience et de projection,
+### projection utilise l'optim projetée
+### réel utilise les joueurs actifs de la semaine
+data_exp_proj <- exp_projete(projections, reel, c("Period", "Status"))
+
+graph_exp_proj(data_exp_proj)
+```
+
+
+## Points réels versus optimaux
+
+> Le graphique suivant présente les points réels effectués cumulatifs en bleu et les points optimaux en rouge. Les points optimaux laissent votre pire joueur par position sur le banc selon chaque semaine. Le pourcentage représente l'efficacité.
+
+```{r}
+graph_coach_perf(reel)
+```
+
+## Comparaison du reel et du projeté
+
+### Heatmap par position
+
+Ici on considère l'ensemble des joueurs, pas seulement les actifs ni les optimaux
+
+```{r}
+graph_hm_pos(projections, reel, c("Position", "Status"))
+```
+
+### Corrélation entre les points réels et projetés
+
+```{r}
+data_comp <- comp_reelvsproj(projections, reel, c("Status"))
+
+paste0("Le coefficient de corrélation entre les points réels et projetés est de ", round(cor(data_comp$points_reels, data_comp$points_proj, use = "complete.obs"), 3))
+
+graph_corr(data_comp, points_reels, points_proj)
+```
+
+### Corrélation entre les rangs réels et projetés
+
+```{r}
+paste0("Le coefficient de corrélation entre les points réels et projetés est de ", round(cor(data_comp$rang_reel, data_comp$rang_proj, use = "complete.obs"), 3))
+
+graph_corr(data_comp, rang_reel, rang_proj)
+```

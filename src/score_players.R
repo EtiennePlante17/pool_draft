@@ -124,9 +124,7 @@ score_players <- function(data, w_pts = 0.25, w_cout = 0.25, w_renta = 0.25,
     positions_participant[1] - pick_current,
     1
   )
-  
   }
-  
  
   # Vecteur du nombre de picks par status
   nb_picks_status <- tibble(
@@ -166,29 +164,36 @@ score_players <- function(data, w_pts = 0.25, w_cout = 0.25, w_renta = 0.25,
         score_prelim[n_pick + 1],
         first(score_prelim)
       ),
-      cout_opp = meilleur_score - score_apres_picks,
       nb_disponibles = n(),
       .groups = "drop"
     )
   
-  # Calcul de l'urgence entre les 3 positions
-  min_opp <- min(cout_opportunite$cout_opp, na.rm = TRUE)
-  max_opp <- max(cout_opportunite$cout_opp, na.rm = TRUE)
-  
-  if (max_opp == min_opp) {
-    cout_opportunite$score_urgence <- 0
-  } else {
-    cout_opportunite$score_urgence <- 
-      (cout_opportunite$cout_opp - min_opp) /
-      (max_opp - min_opp)
-  }
+  besoin_normalise <- requis_perso %>%
+    select(Position, restant) %>%
+    mutate(
+      besoin_normalise = if (max(restant) == min(restant)) {
+        1
+      } else {
+        ifelse(
+          (Position == "F" & restant <= f_bench) |
+            (Position == "D" & restant <= d_bench) |
+            (Position == "G" & restant <= g_bench),
+          0,
+          0.25 + 0.75 * 
+            (restant - min(restant)) / (max(restant) - min(restant))
+        )
+      }
+    )
   
   score_prelim %>%
     left_join(cout_opportunite, by = "Position") %>%
+    left_join(besoin_normalise, by = "Position") %>%
     mutate(
-      score = score_prelim * (1 + w_rare * score_urgence)
+      score_urgence = (score_prelim - score_apres_picks) /
+        (max(meilleur_score)- min(score_apres_picks)),
+      
+      score = score_prelim * (1 + w_rare * score_urgence * besoin_normalise)
     ) %>%
     arrange(desc(score))
   
 }
-
