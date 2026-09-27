@@ -51,9 +51,11 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
 
       # Générer le rapport
-      - name: Render du rapport
+     - name: Render du rapport
         run: |
-          quarto render 2026/suivi_2026.qmd --output-dir _site/2026
+          quarto render 2026/suivi_2026.qmd
+          mkdir -p _site/2026
+          cp 2026/suivi_2026.html _site/2026/
 
       # Configurer GitHub Pages
       - name: Setup Pages
