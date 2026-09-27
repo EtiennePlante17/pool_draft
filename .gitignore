@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 *.rds
+**/projections/
+**/reel/
+*.html
