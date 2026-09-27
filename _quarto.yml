@@ -1,0 +1,50 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Pool Draft"
+
+  navbar:
+    left:
+      - text: "Accueil"
+        href: index.qmd
+
+      - text: "2025"
+        href: 2025/resultats_2025.qmd
+
+      - text: "2026"
+        href: 2026/suivi_2026.qmd
+
+    right:
+      - icon: github
+        href: https://github.com/EtiennePlante17/pool_draft
+        aria-label: GitHub
+
+  sidebar:
+
+    - title: "2025"
+      style: "docked"
+      background: light
+      contents:
+        - text: "Résultats"
+          href: 2025/resultats_2025.qmd
+
+    - title: "2026"
+      style: "docked"
+      background: light
+      contents:
+        - text: "Draft"
+          href: 2026/draft_result.qmd
+
+        - text: "Simulation"
+          href: 2026/draft_simul.qmd
+
+        - text: "Suivi"
+          href: 2026/suivi_2026.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    embed-resources: true

@@ -1,0 +1,21 @@
+---
+title: "Pool Draft"
+---
+
+# Bienvenue
+
+Bienvenue sur le site de suivi du pool.
+
+## Saisons disponibles
+
+### 2026
+
+Consultez les résultats, les simulations et le suivi de la saison 2026.
+
+[Accéder aux résultats 2026](2026/suivi_2026.qmd)
+
+### 2025
+
+Consultez les résultats de la saison 2025.
+
+[Accéder aux résultats 2025](2025/resultats_2025.qmd)

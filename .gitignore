@@ -5,3 +5,5 @@
 *.rds
 *.html
 _site/
+/.quarto/
+**/*.quarto_ipynb

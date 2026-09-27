@@ -1,8 +1,5 @@
 ---
 title: "Résultats du pool de saison régulière 2025"
-format:
-  html:
-    embed-resources: true
 execute:
   echo: false
   message: false
@@ -22,17 +19,20 @@ library(purrr)
 library(ggplot2)
 library(tidyr)
 library(plotly)
+library(here)
+
+i_am("2025/resultats_2025.qmd")
 
 # Lire l'historique par période
 read_periods <- function(year_draft, n_periods = 28) {
   
   map_dfr(1:n_periods, function(i) {
     
-    read.csv2(
+    read.csv2(here(
       file.path( 
         "data", year_draft, 
         paste0("reel_period/Fantrax-Players-Pool Promutuel_", i, ".csv")
-      ),
+      )),
       sep = ","
     ) %>%
       select(ID, Player, Team, Position, Status, Roster.Status, FPts)|>
@@ -45,7 +45,7 @@ results <- read_periods(2025, 28)
 
 # Lire l'ancien fichier de projections que j'avais
 projections <- read.csv2(
-  file.path("data", 2025, "fantrax_projections.csv"), 
+  here(file.path("data", 2025, "fantrax_projections.csv")), 
   sep = ",")
 
 ```

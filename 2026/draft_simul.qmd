@@ -1,8 +1,5 @@
 ---
-title: "Résultats de la simulation du draft"
-format:
-  html:
-    embed-resources: true
+title: "Résultats de la simulation du draft 2026"
 execute:
   echo: false
   message: false

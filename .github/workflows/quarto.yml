@@ -1,4 +1,4 @@
-name: Publier les rapports Quarto
+name: Publier le site Quarto
 
 on:
   push:
@@ -50,12 +50,10 @@ jobs:
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      # Générer le rapport
-      - name: Render du rapport
+      # Générer le site complet
+      - name: Render du site
         run: |
-          quarto render 2026/suivi_2026.qmd
-          mkdir -p _site/2026
-          cp 2026/suivi_2026.html _site/2026/
+          quarto render
 
       # Configurer GitHub Pages
       - name: Setup Pages

@@ -1,8 +1,5 @@
 ---
-title: "Suivi des résultats 2026"
-format:
-  html:
-    embed-resources: true
+title: "Suivi des résultats hebdo 2026"
 execute:
   echo: false
   message: false

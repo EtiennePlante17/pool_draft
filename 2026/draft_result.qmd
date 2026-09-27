@@ -1,8 +1,5 @@
 ---
 title: "Résultats du draft 2026"
-format:
-  html:
-    embed-resources: true
 execute:
   echo: false
   message: false
