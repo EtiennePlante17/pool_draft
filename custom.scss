@@ -1,0 +1,580 @@
+/*-- scss:defaults --*/
+
+/* ============================================================
+   COULEURS
+   ============================================================ */
+
+$hockey-navy: #0b2d4d;
+$hockey-blue: #164f7a;
+$hockey-light-blue: #eaf3f9;
+
+$hockey-red: #c62828;
+$hockey-dark-red: #9f1f1f;
+
+$ice: #f3f7fa;
+$ice-dark: #dce8f0;
+
+$white: #ffffff;
+
+$text-dark: #1b2733;
+$text-muted: #667582;
+
+$gold: #ffd700;
+$silver: #c0c0c0;
+$bronze: #cd7f32;
+
+
+/* Variables Quarto / Bootstrap */
+
+$primary: $hockey-navy;
+$secondary: $hockey-blue;
+
+$body-bg: $ice;
+$body-color: $text-dark;
+
+$link-color: $hockey-blue;
+$link-hover-color: $hockey-red;
+
+$headings-color: $hockey-navy;
+
+$border-radius: 8px;
+$border-radius-lg: 12px;
+
+
+/*-- scss:rules --*/
+
+
+/* ============================================================
+   POLICE
+   ============================================================ */
+
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+
+/* ============================================================
+   ARRIÈRE-PLAN
+   ============================================================ */
+
+body {
+  background-color: $ice;
+}
+
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+
+.navbar {
+  background-color: $hockey-navy !important;
+  border-bottom: 4px solid $hockey-red;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.navbar-brand {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.navbar-brand,
+.navbar-nav .nav-link {
+  color: $white !important;
+}
+
+.navbar-nav .nav-link {
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+  border-radius: 6px;
+}
+
+.navbar-nav .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+
+.sidebar {
+  background-color: $white;
+  border-right: 1px solid $ice-dark;
+}
+
+.sidebar-title {
+  color: $hockey-navy;
+  font-weight: 800;
+}
+
+.sidebar .nav-link {
+  color: $text-dark;
+  border-radius: 6px;
+  margin: 2px 8px;
+}
+
+.sidebar .nav-link:hover {
+  background-color: $hockey-light-blue;
+  color: $hockey-navy;
+}
+
+.sidebar .nav-link.active {
+  background-color: $hockey-navy;
+  color: $white !important;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   TITRES
+   ============================================================ */
+
+h1 {
+  color: $hockey-navy;
+  font-size: 2.4rem;
+  font-weight: 800;
+
+  padding-bottom: 12px;
+  border-bottom: 4px solid $hockey-red;
+
+  margin-bottom: 30px;
+}
+
+h2 {
+  color: $hockey-navy;
+  font-size: 1.7rem;
+
+  margin-top: 40px;
+  margin-bottom: 20px;
+
+  padding-bottom: 8px;
+  border-bottom: 2px solid $ice-dark;
+}
+
+h3 {
+  color: $hockey-blue;
+  font-size: 1.25rem;
+}
+
+
+/* ============================================================
+   LIENS
+   ============================================================ */
+
+a {
+  font-weight: 500;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+
+/* ============================================================
+   CARTES
+   ============================================================ */
+
+.card {
+  background: $white;
+
+  border: 1px solid $ice-dark;
+  border-top: 4px solid $hockey-navy;
+
+  border-radius: $border-radius-lg;
+
+  box-shadow:
+    0 2px 6px rgba(11, 45, 77, 0.08);
+
+  margin-bottom: 20px;
+}
+
+.card:hover {
+  box-shadow:
+    0 4px 12px rgba(11, 45, 77, 0.12);
+}
+
+.card-title {
+  color: $hockey-navy;
+  font-weight: 800;
+}
+
+
+/* ============================================================
+   TABLEAUX
+   ============================================================ */
+
+table {
+  background-color: $white;
+  border-radius: 8px;
+  overflow: hidden;
+
+  border: 1px solid $ice-dark;
+}
+
+thead {
+  background-color: $hockey-navy !important;
+  color: $white !important;
+}
+
+thead th {
+  color: $white !important;
+  font-weight: 700;
+  border-bottom: none !important;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #f7fafc;
+}
+
+tbody tr:hover {
+  background-color: $hockey-light-blue;
+}
+
+
+/* ============================================================
+   BLOCS DE CODE
+   ============================================================ */
+
+pre {
+  border-radius: 8px;
+  border-left: 4px solid $hockey-blue;
+}
+
+code {
+  color: $hockey-dark-red;
+}
+
+
+/* ============================================================
+   CALLOUTS
+   ============================================================ */
+
+.callout {
+  border-radius: 8px;
+}
+
+.callout-title {
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   TABS QUARTO
+   ============================================================ */
+
+.nav-tabs {
+  border-bottom: 2px solid $ice-dark;
+}
+
+.nav-tabs .nav-link {
+  color: $text-muted;
+  font-weight: 600;
+}
+
+.nav-tabs .nav-link:hover {
+  color: $hockey-navy;
+  border-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+  color: $hockey-navy;
+  font-weight: 800;
+
+  border-top: 3px solid $hockey-red;
+  border-left: 1px solid $ice-dark;
+  border-right: 1px solid $ice-dark;
+  border-bottom-color: $white;
+
+  background-color: $white;
+}
+
+
+/* ============================================================
+   COLONNES
+   ============================================================ */
+
+.columns {
+  gap: 20px;
+}
+
+.column {
+  min-width: 0;
+}
+
+
+/* ============================================================
+   CARTES DES ÉTOILES
+   ============================================================ */
+
+.star-card {
+  background-color: $white;
+
+  border: 1px solid $ice-dark;
+  border-top: 4px solid $hockey-navy;
+
+  border-radius: 10px;
+
+  padding: 15px;
+
+  box-shadow:
+    0 2px 6px rgba(11, 45, 77, 0.08);
+}
+
+.star-card h3 {
+  margin-top: 0;
+  color: $hockey-navy;
+}
+
+
+/* ============================================================
+   CLASSEMENT
+   ============================================================ */
+
+.standings {
+  background-color: $white;
+
+  border-radius: 10px;
+  border: 1px solid $ice-dark;
+
+  overflow: hidden;
+}
+
+.standings-header {
+  background-color: $hockey-navy;
+  color: $white;
+
+  padding: 12px 16px;
+
+  font-weight: 800;
+}
+
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+
+.badge-hockey {
+  display: inline-block;
+
+  background-color: $hockey-navy;
+  color: $white;
+
+  padding: 4px 9px;
+
+  border-radius: 999px;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.badge-red {
+  background-color: $hockey-red;
+}
+
+.badge-blue {
+  background-color: $hockey-blue;
+}
+
+
+/* ============================================================
+   MÉDAILLES
+   ============================================================ */
+
+.medal-gold {
+  background-color: $gold !important;
+  color: #3d3200 !important;
+}
+
+.medal-silver {
+  background-color: $silver !important;
+  color: #252525 !important;
+}
+
+.medal-bronze {
+  background-color: $bronze !important;
+  color: $white !important;
+}
+
+
+/* ============================================================
+   SÉPARATEUR HOCKEY
+   ============================================================ */
+
+.hockey-divider {
+  height: 4px;
+
+  background:
+    linear-gradient(
+      to right,
+      $hockey-navy 0%,
+      $hockey-navy 70%,
+      $hockey-red 70%,
+      $hockey-red 100%
+    );
+
+  border-radius: 2px;
+
+  margin: 25px 0;
+}
+
+
+/* ============================================================
+   HERO
+   ============================================================ */
+
+.hero-hockey {
+  background:
+    linear-gradient(
+      135deg,
+      $hockey-navy,
+      $hockey-blue
+    );
+
+  color: $white;
+
+  padding: 40px;
+
+  border-radius: 12px;
+
+  border-bottom: 5px solid $hockey-red;
+
+  margin-bottom: 30px;
+
+  box-shadow:
+    0 4px 12px rgba(11, 45, 77, 0.15);
+}
+
+.hero-hockey h1,
+.hero-hockey h2,
+.hero-hockey h3 {
+  color: $white;
+  border: none;
+}
+
+.hero-hockey p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+
+/* ============================================================
+   STATISTIQUES
+   ============================================================ */
+
+.stat-card {
+  background-color: $white;
+
+  border-radius: 10px;
+
+  border: 1px solid $ice-dark;
+  border-top: 4px solid $hockey-blue;
+
+  padding: 20px;
+
+  text-align: center;
+
+  box-shadow:
+    0 2px 6px rgba(11, 45, 77, 0.07);
+}
+
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: $hockey-navy;
+}
+
+.stat-card .stat-label {
+  color: $text-muted;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+
+/* ============================================================
+   GRAPHIQUES
+   ============================================================ */
+
+.plotly {
+  background-color: $white;
+
+  border-radius: 10px;
+  border: 1px solid $ice-dark;
+
+  padding: 5px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  h1 {
+    font-size: 1.9rem;
+  }
+
+  h2 {
+    font-size: 1.45rem;
+  }
+
+  .hero-hockey {
+    padding: 25px;
+  }
+
+  .columns {
+    display: block;
+  }
+
+  .column {
+    width: 100% !important;
+    margin-bottom: 20px;
+  }
+
+  .sidebar {
+    border-right: none;
+  }
+}
+
+
+/* ============================================================
+   PETITS DÉTAILS
+   ============================================================ */
+
+.quarto-title-meta {
+  color: $text-muted;
+}
+
+.quarto-title-banner {
+  background-color: $hockey-navy;
+}
+
+blockquote {
+  border-left: 4px solid $hockey-red;
+  color: $text-muted;
+}
+
+hr {
+  border: none;
+  height: 2px;
+  background-color: $ice-dark;
+  margin: 30px 0;
+}

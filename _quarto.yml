@@ -3,18 +3,21 @@ project:
   output-dir: _site
 
 website:
-  title: "Pool Draft"
+  title: "🏒 Pool Draft"
 
   navbar:
+    background: "#0b2d4d"
+    foreground: "#ffffff"
+
     left:
-      - text: "Accueil"
+      - text: "🏠 Accueil"
         href: index.qmd
 
-      - text: "2025"
-        href: 2025/resultats_2025.qmd
-
-      - text: "2026"
+      - text: "🏆 2026"
         href: 2026/suivi_2026.qmd
+
+      - text: "📊 2025"
+        href: 2025/resultats_2025.qmd
 
     right:
       - icon: github
@@ -22,29 +25,43 @@ website:
         aria-label: GitHub
 
   sidebar:
-
-    - title: "2025"
+    - title: "🏆 Saison 2026"
       style: "docked"
       background: light
       contents:
-        - text: "Résultats"
-          href: 2025/resultats_2025.qmd
+        - text: "📈 Suivi"
+          href: 2026/suivi_2026.qmd
 
-    - title: "2026"
-      style: "docked"
-      background: light
-      contents:
-        - text: "Draft"
+        - text: "📋 Draft"
           href: 2026/draft_result.qmd
 
-        - text: "Simulation"
+        - text: "🔮 Simulation"
           href: 2026/draft_simul.qmd
 
-        - text: "Suivi"
-          href: 2026/suivi_2026.qmd
+    - title: "📊 Saison 2025"
+      style: "docked"
+      background: light
+      contents:
+        - text: "📋 Résultats"
+          href: 2025/resultats_2025.qmd
 
 format:
   html:
-    theme: cosmo
+    theme:
+      - cosmo
+      - custom.scss
+
     toc: true
+    toc-location: right
+
+    code-fold: true
+    code-summary: "Afficher le code"
+
+    smooth-scroll: true
+
     embed-resources: true
+
+    link-external-newwindow: true
+
+execute:
+  freeze: auto

@@ -45,6 +45,7 @@ reel <- read_periods_reel(year_draft, week_obs) %>%
 ```
 
 ## Points cumulatifs et hebdomadaire
+
 ```{r}
 data_rang <- reel %>%
   filter(Roster.Status == "Active") %>%
@@ -168,14 +169,10 @@ data_rang %>%
   )
 ```
 
-
-
 ## ⭐ Les étoiles de la semaine
 
-::: {.columns}
-
+:::::: columns
 ::: {.column width="33%"}
-
 ### 🏒 Attaquants
 
 ```{r}
@@ -191,30 +188,24 @@ etoiles <- reel %>%
 table_etoile(etoiles, "F")
 
 ```
-
 :::
 
 ::: {.column width="33%"}
-
 ### 🛡️ Défenseurs
 
 ```{r}
 table_etoile(etoiles, "D")
 ```
-
 :::
 
 ::: {.column width="33%"}
-
 ### 🥅 Gardiens
 
 ```{r}
 table_etoile(etoiles, "G")
 ```
-
 :::
-
-:::
+::::::
 
 ## Expérience à date et points projetés
 
@@ -228,7 +219,6 @@ data_exp_proj <- exp_projete(projections, reel, c("Period", "Status"))
 graph_exp_proj(data_exp_proj)
 ```
 
-
 ## Points réels versus optimaux
 
 > Le graphique suivant présente les points réels effectués cumulatifs en bleu et les points optimaux en rouge. Les points optimaux laissent votre pire joueur par position sur le banc selon chaque semaine. Le pourcentage représente l'efficacité.
@@ -237,14 +227,13 @@ graph_exp_proj(data_exp_proj)
 graph_coach_perf(reel)
 ```
 
-## Comparaison du reel et du projeté
+## Comparaison du réel et du projeté
 
 ### Heatmap par position
 
 Ici on considère l'ensemble des joueurs, pas seulement les actifs ni les optimaux
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ## Cumulatif
 
 ```{r}
