@@ -247,8 +247,10 @@ graph_hm_pos(projections, reel, c("Position", "Status"), "semaine")
 ```
 :::
 
-### Corrélation entre les points réels et projetés
+### Corrélation entre le réel et le projeté
 
+::: panel-tabset
+## Points
 ```{r}
 data_comp <- comp_reelvsproj(projections, reel, c("Status"))
 
@@ -257,10 +259,12 @@ paste0("Le coefficient de corrélation entre les points réels et projetés est 
 graph_corr(data_comp, points_reels, points_proj)
 ```
 
-### Corrélation entre les rangs réels et projetés
+## Rang
 
 ```{r}
 paste0("Le coefficient de corrélation entre les rangs réels et projetés est de ", round(cor(data_comp$rang_reel, data_comp$rang_proj, use = "complete.obs"), 3))
 
 graph_corr(data_comp, rang_reel, rang_proj)
 ```
+
+:::
