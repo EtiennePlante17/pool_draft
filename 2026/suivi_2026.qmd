@@ -193,9 +193,20 @@ graph_coach_perf(reel)
 
 Ici on considère l'ensemble des joueurs, pas seulement les actifs ni les optimaux
 
+::: {.panel-tabset}
+
+## Cumulatif
+
 ```{r}
-graph_hm_pos(projections, reel, c("Position", "Status"))
+graph_hm_pos(projections, reel, c("Position", "Status"), "cumulatif")
 ```
+
+## Hebdomadaire
+
+```{r}
+graph_hm_pos(projections, reel, c("Position", "Status"), "semaine")
+```
+:::
 
 ### Corrélation entre les points réels et projetés
 
@@ -210,7 +221,7 @@ graph_corr(data_comp, points_reels, points_proj)
 ### Corrélation entre les rangs réels et projetés
 
 ```{r}
-paste0("Le coefficient de corrélation entre les points réels et projetés est de ", round(cor(data_comp$rang_reel, data_comp$rang_proj, use = "complete.obs"), 3))
+paste0("Le coefficient de corrélation entre les rangs réels et projetés est de ", round(cor(data_comp$rang_reel, data_comp$rang_proj, use = "complete.obs"), 3))
 
 graph_corr(data_comp, rang_reel, rang_proj)
 ```

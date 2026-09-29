@@ -8,7 +8,7 @@ graph_exp_proj <- function(data) {
     ) %>%
     summarise(points_proj = sum(points_proj), points_reels = sum(points_reels),
               points_tot = sum(points_tot), .by = "Status") %>%
-    arrange(points_tot)
+    arrange(-points_tot)
   
   moyenne <- mean(graph_data$points_tot)
   

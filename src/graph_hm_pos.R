@@ -1,6 +1,6 @@
-graph_hm_pos <- function(data_proj, data_reel, group) {
+graph_hm_pos <- function(data_proj, data_reel, group, periode) {
 
-  df_ecart_pos <- comp_reelvsproj(data_proj, data_reel, group)
+  df_ecart_pos <- comp_reelvsproj(data_proj, data_reel, group, periode)
   
   ggplot(df_ecart_pos, aes(x = Position, y = Status, fill = ecart)) +
     geom_tile() +

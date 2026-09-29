@@ -1,4 +1,17 @@
-comp_reelvsproj <- function(data_proj, data_reel, group) {
+comp_reelvsproj <- function(data_proj, data_reel,group,
+                            periode = c("cumulatif", "semaine") ) {
+  
+  periode <- match.arg(periode)
+  
+  # Filtrer sur la semaine en cours si demandé
+  if (periode == "semaine") {
+    
+    data_proj <- data_proj %>%
+      filter(Period == week_obs)
+    
+    data_reel <- data_reel %>%
+      filter(Period == week_obs)
+  }
   
   data_proj %>%
     summarise(points_proj = sum(FPts), .by = c("Position", "Status", "Period")) %>%
