@@ -34,6 +34,8 @@ source(here("src/graph_coach_perf.R"))
 source(here("src/graph_hm_pos.R"))
 source(here("src/graph_cor.R"))
 source(here("src/graph_exp_proj.R"))
+# tableaux
+source(here("src/table_etoile.R"))
 
 projections <- read_periods_proj(year_draft, week_tot) %>%
   find_optimal(c("Status", "Position", "Period"), "optimal_proj")
@@ -165,6 +167,54 @@ data_rang %>%
     column_labels.background.color = "#2C3E50"
   )
 ```
+
+
+
+## ⭐ Les étoiles de la semaine
+
+::: {.columns}
+
+::: {.column width="33%"}
+
+### 🏒 Attaquants
+
+```{r}
+etoiles <- reel %>%
+  filter(Period == week_obs) %>%
+  group_by(Position) %>%
+  arrange(desc(FPts), desc(FP.G), .by_group = TRUE) %>%
+  mutate(pos = row_number()) %>%
+  filter(pos <= 3) %>%
+  ungroup() %>%
+  select(pos, Player, Position, Status, FPts)
+
+table_etoile(etoiles, "F")
+
+```
+
+:::
+
+::: {.column width="33%"}
+
+### 🛡️ Défenseurs
+
+```{r}
+table_etoile(etoiles, "D")
+```
+
+:::
+
+::: {.column width="33%"}
+
+### 🥅 Gardiens
+
+```{r}
+table_etoile(etoiles, "G")
+```
+
+:::
+
+:::
 
 ## Expérience à date et points projetés
 
