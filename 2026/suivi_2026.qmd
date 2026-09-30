@@ -8,7 +8,9 @@ execute:
 ```{r, echo=FALSE}
 #| message: false
 
-week_obs <- 2
+# Params variables
+week_obs <- 1
+# Params fixe pour la saison
 week_tot <- 28
 year_draft <- 2026
 
@@ -42,6 +44,10 @@ projections <- read_periods_proj(year_draft, week_tot) %>%
   
 reel <- read_periods_reel(year_draft, week_obs) %>%
   find_optimal(c("Status", "Position", "Period"), "optimal_reel")
+
+data_comp_hebdo <- comp_reelvsproj(projections, reel, c("Status"), "semaine")
+
+data_exp_proj <- exp_projete(projections, reel, c("Period", "Status"))
 ```
 
 ## Points cumulatifs et hebdomadaire
@@ -86,9 +92,9 @@ data_rang %>%
   cols_label(
     Rang = "Rang",
     Status = "Équipe",
-    `Points semaine` = "Cette semaine",
-    `Points cumulés` = "Total",
-    Mouvement = "Mouvement"
+    `Points semaine` = "Points hebdo",
+    `Points cumulés` = "Points cumul",
+    Mouvement = "Mouvement rang"
   ) %>%
   fmt_number(
     columns = c(`Points semaine`, `Points cumulés`),
@@ -207,40 +213,142 @@ table_etoile(etoiles, "G")
 :::
 ::::::
 
-## Expérience à date et points projetés
+## ⚡ En rafale
 
 ```{r}
+#| results: hide
+#| message: false
+#| warning: false
 
+highest_scorer <- reel |> 
+  filter(Period == week_obs & Roster.Status == "Active") |>
+  summarise(points = sum(FPts), .by = Status) |> 
+  arrange(-points) |> slice(1)
+
+lowest_scorer <- reel |> 
+  filter(Period == week_obs & Roster.Status == "Active") |>
+  summarise(points = sum(FPts), .by = Status) |> 
+  arrange(points) |> slice(1)
+
+overachiever <- data_comp_hebdo |> 
+  arrange(-ecart) |> 
+  slice(1)
+
+below_exp <- data_comp_hebdo |> 
+  arrange(ecart) |> 
+  slice(1)
+
+worst_manager <- data_reel_optim(reel, "Status", "semaine") %>%
+    arrange(-ecart_optimal, efficiency) %>%
+    slice(1)
+```
+
+:::: {.recap-grid}
+
+::: {.recap-card style="--accent: #e0a100; --tint: #fff9e8;"}
+### 🏆 Meilleur pointage
+
+**`r highest_scorer$Status`**  
+`r round(highest_scorer$points, 1)` points
+:::
+
+::: {.recap-card style="--accent: #73808c; --tint: #f3f5f7;"}
+### 💩 Pointage le plus bas
+
+**`r lowest_scorer$Status`**  
+`r round(lowest_scorer$points, 1)` points
+:::
+
+::: {.recap-card style="--accent: #238636; --tint: #edf8ef;"}
+### 📈 Au-dessus des attentes
+
+**`r overachiever$Status`**  
+Écart : `r round(overachiever$ecart, 1)` points réels par rapport au prédit.
+:::
+
+::: {.recap-card style="--accent: #c43c35; --tint: #fff0ef;"}
+### 📉 Sous les attentes
+
+**`r below_exp$Status`**  
+Écart : `r round(below_exp$ecart, 1)` points réels par rapport au prédit.
+:::
+
+::: {.recap-card style="--accent: #d97706; --tint: #fff7e8;"}
+### 🎯 Plus loin de l’optimal
+
+**`r worst_manager$Status`**  
+`r round(worst_manager$ecart_optimal, 1)` points perdus sur le banc sur `r round(worst_manager$points_optim, 1)` optimaux.
+:::
+
+::::
+## Expérience à date
+
+### Combinaison du réel et de la projection
+> Les points réels sont pour les semaines terminées, les points projetés sont seulement pour les semaines restantes selon la projection au début de la saison
+
+```{r}
 # pour les données combinées d'expérience et de projection,
 ### projection utilise l'optim projetée
 ### réel utilise les joueurs actifs de la semaine
-data_exp_proj <- exp_projete(projections, reel, c("Period", "Status"))
-
 graph_exp_proj(data_exp_proj)
+```
+
+### Points par période
+```{r}
+points_cum <- reel |> 
+  filter(Roster.Status == "Active") |>
+  summarise(points = sum(FPts), .by = c(Status, Period)) |> 
+  tidyr::complete(Status, Period = c(0, unique(Period)), fill = list(points = 0)) |> 
+  arrange(Status, Period) |>
+  group_by(Status) |>
+  mutate(points_cum = cumsum(points)) |>
+  ungroup()
+
+ggplotly(
+ggplot(points_cum, aes(x = Period, y = points_cum, color = Status)) +
+  geom_line(linewidth = 1.2) +
+  labs(
+    title = "Points cumulés par participant",
+    x = "Période",
+    y = "Points cumulés"
+  ) +
+  theme_minimal()
+)
+
 ```
 
 ## Points réels versus optimaux
 
-> Le graphique suivant présente les points réels effectués cumulatifs en bleu et les points optimaux en rouge. Les points optimaux laissent votre pire joueur par position sur le banc selon chaque semaine. Le pourcentage représente l'efficacité.
+> Le graphique suivant présente les points réels effectués en bleu et les points optimaux en rouge. Les points optimaux laissent votre pire joueur par position sur le banc selon chaque semaine. Le pourcentage représente l'efficacité des points que vous êtes allé chercher.
+
+::: panel-tabset
+### Cumulatif
 
 ```{r}
-graph_coach_perf(reel)
+graph_coach_perf(data_reel_optim(reel, "Status", "cumulatif"))
 ```
+
+### Hebdomadaire
+
+```{r}
+graph_coach_perf(data_reel_optim(reel, "Status", "semaine"))
+```
+:::
 
 ## Comparaison du réel et du projeté
 
 ### Heatmap par position
 
-Ici on considère l'ensemble des joueurs, pas seulement les actifs ni les optimaux
+Ici on considère l'ensemble des joueurs, c'est à dire les actifs et le banc
 
 ::: panel-tabset
-## Cumulatif
+#### Cumulatif
 
 ```{r}
 graph_hm_pos(projections, reel, c("Position", "Status"), "cumulatif")
 ```
 
-## Hebdomadaire
+#### Hebdomadaire
 
 ```{r}
 graph_hm_pos(projections, reel, c("Position", "Status"), "semaine")
@@ -250,21 +358,21 @@ graph_hm_pos(projections, reel, c("Position", "Status"), "semaine")
 ### Corrélation entre le réel et le projeté
 
 ::: panel-tabset
-## Points
-```{r}
-data_comp <- comp_reelvsproj(projections, reel, c("Status"))
-
-paste0("Le coefficient de corrélation entre les points réels et projetés est de ", round(cor(data_comp$points_reels, data_comp$points_proj, use = "complete.obs"), 3))
-
-graph_corr(data_comp, points_reels, points_proj)
-```
-
-## Rang
+#### Points
 
 ```{r}
-paste0("Le coefficient de corrélation entre les rangs réels et projetés est de ", round(cor(data_comp$rang_reel, data_comp$rang_proj, use = "complete.obs"), 3))
+data_comp_cum <- comp_reelvsproj(projections, reel, c("Status"), "cumulatif")
 
-graph_corr(data_comp, rang_reel, rang_proj)
+paste0("Le coefficient de corrélation entre les points réels et projetés est de ", round(cor(data_comp_cum$points_reels, data_comp_cum$points_proj, use = "complete.obs"), 3))
+
+graph_corr(data_comp_cum, points_reels, points_proj)
 ```
 
+#### Rang
+
+```{r}
+paste0("Le coefficient de corrélation entre les rangs réels et projetés est de ", round(cor(data_comp_cum$rang_reel, data_comp_cum$rang_proj, use = "complete.obs"), 3))
+
+graph_corr(data_comp_cum, rang_reel, rang_proj)
+```
 :::

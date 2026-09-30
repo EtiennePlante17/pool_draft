@@ -344,6 +344,40 @@ code {
   color: $hockey-navy;
 }
 
+/* ============================================================
+   CARTES EN RAFALE
+   ============================================================ */
+   
+.recap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 2rem;
+}
+
+.recap-card {
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid #dce3ea;
+  border-left: 5px solid var(--accent);
+  background: var(--tint);
+  box-shadow: 0 2px 7px rgba(30, 50, 70, 0.07);
+}
+
+.recap-card h3 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.recap-card p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 700px) {
+  .recap-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* ============================================================
    CLASSEMENT

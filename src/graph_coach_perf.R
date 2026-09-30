@@ -1,21 +1,6 @@
 graph_coach_perf <- function(data) {
   
-  coach_perf <- data %>%
-    group_by(Status) %>%
-    summarise(points_reels = sum(FPts[Roster.Status == "Active"], na.rm = TRUE),
-              .groups = "drop") %>%
-    inner_join(
-      data %>%
-        group_by(Status) %>%
-        summarise(points_optim = sum(FPts[optimal_reel == 1], na.rm = TRUE),
-                  .groups = "drop"),
-      by = "Status"
-    ) %>%
-    mutate(
-      efficiency = points_reels / points_optim,
-      ecart_optimal = points_optim - points_reels
-    ) %>%
-    arrange((points_reels), desc(efficiency))
+  coach_perf <- data
   
   ordre_status <- coach_perf |>
     arrange(points_reels) |>   
