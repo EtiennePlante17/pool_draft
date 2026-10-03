@@ -36,6 +36,7 @@ source(here("src/graph_coach_perf.R"))
 source(here("src/graph_hm_pos.R"))
 source(here("src/graph_cor.R"))
 source(here("src/graph_exp_proj.R"))
+source(here("src/graph_points_salaire.R"))
 # tableaux
 source(here("src/table_etoile.R"))
 
@@ -43,7 +44,8 @@ projections <- read_periods_proj(year_draft, week_tot) %>%
   find_optimal(c("Status", "Position", "Period"), "optimal_proj")
   
 reel <- read_periods_reel(year_draft, week_obs) %>%
-  find_optimal(c("Status", "Position", "Period"), "optimal_reel")
+  find_optimal(c("Status", "Position", "Period"), "optimal_reel") %>%
+  mutate(salaire = as.numeric(gsub(",", "", Salary)))
 
 data_comp_hebdo <- comp_reelvsproj(projections, reel, c("Status"), "semaine")
 
@@ -238,52 +240,79 @@ below_exp <- data_comp_hebdo |>
   arrange(ecart) |> 
   slice(1)
 
+high_economy <- reel |> 
+  filter(Period == week_obs & Roster.Status == "Active") |>
+  summarise(points = sum(FPts), .by = c(Status,salaire,Player)) |>
+  mutate(pts_salaire = salaire/points) |> 
+  arrange(pts_salaire, -salaire) |> slice(1)
+
+low_economy <- reel |> 
+  filter(Period == week_obs & Roster.Status == "Active") |>
+  summarise(points = sum(FPts), .by = c(Status,salaire,Player)) |>
+  mutate(pts_salaire = salaire/points) |> 
+  arrange(-pts_salaire, -salaire) |> slice(1)
+
+
 worst_manager <- data_reel_optim(reel, "Status", "semaine") %>%
     arrange(-ecart_optimal, efficiency) %>%
     slice(1)
 ```
 
-:::: {.recap-grid}
-
+:::::::::: recap-grid
 ::: {.recap-card style="--accent: #e0a100; --tint: #fff9e8;"}
 ### 🏆 Meilleur pointage
 
-**`r highest_scorer$Status`**  
+**`r highest_scorer$Status`**\
 `r round(highest_scorer$points, 1)` points
 :::
 
 ::: {.recap-card style="--accent: #73808c; --tint: #f3f5f7;"}
 ### 💩 Pointage le plus bas
 
-**`r lowest_scorer$Status`**  
+**`r lowest_scorer$Status`**\
 `r round(lowest_scorer$points, 1)` points
 :::
 
 ::: {.recap-card style="--accent: #238636; --tint: #edf8ef;"}
 ### 📈 Au-dessus des attentes
 
-**`r overachiever$Status`**  
+**`r overachiever$Status`**\
 Écart : `r round(overachiever$ecart, 1)` points réels par rapport au prédit.
 :::
 
 ::: {.recap-card style="--accent: #c43c35; --tint: #fff0ef;"}
 ### 📉 Sous les attentes
 
-**`r below_exp$Status`**  
+**`r below_exp$Status`**\
 Écart : `r round(below_exp$ecart, 1)` points réels par rapport au prédit.
+:::
+
+::: {.recap-card style="--accent: #2878b5; --tint: #eef6fc;"}
+### 💰 Joueur le plus rentable
+
+**`r high_economy$Player` (`r high_economy$Status`)**\
+`r high_economy$points` points pour un salaire de `r round(high_economy$salaire/1000000, 1)`M$.
+:::
+
+::: {.recap-card style="--accent: #8b5e3c; --tint: #f7f0e9;"}
+### 🚩 Joueur le moins rentable
+
+**`r low_economy$Player` (`r low_economy$Status`)**\
+`r low_economy$points` points pour un salaire de `r round(low_economy$salaire/1000000, 1)`M$.
 :::
 
 ::: {.recap-card style="--accent: #d97706; --tint: #fff7e8;"}
 ### 🎯 Plus loin de l’optimal
 
-**`r worst_manager$Status`**  
+**`r worst_manager$Status`**\
 `r round(worst_manager$ecart_optimal, 1)` points perdus sur le banc sur `r round(worst_manager$points_optim, 1)` optimaux.
 :::
+::::::::::
 
-::::
 ## Expérience à date
 
 ### Combinaison du réel et de la projection
+
 > Les points réels sont pour les semaines terminées, les points projetés sont seulement pour les semaines restantes selon la projection au début de la saison
 
 ```{r}
@@ -294,6 +323,7 @@ graph_exp_proj(data_exp_proj)
 ```
 
 ### Points par période
+
 ```{r}
 points_cum <- reel |> 
   filter(Roster.Status == "Active") |>
@@ -315,6 +345,12 @@ ggplot(points_cum, aes(x = Period, y = points_cum, color = Status)) +
   theme_minimal()
 )
 
+```
+
+### Points cumulatifs selon la masse salariale
+
+```{r}
+graph_pts_salaire(reel)
 ```
 
 ## Points réels versus optimaux
