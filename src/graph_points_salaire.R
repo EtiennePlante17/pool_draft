@@ -39,7 +39,7 @@ graph_pts_salaire <- function(data) {
     ) +
     labs(
       x = "Masse salariale",
-      y = "FPts projetés",
+      y = "Points cumulatifs",
       colour = "Position"
     ) +
     theme_minimal(base_size = 12) +

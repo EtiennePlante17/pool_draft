@@ -5,7 +5,7 @@ graph_hm_pos <- function(data_proj, data_reel, group, periode) {
   ggplot(df_ecart_pos, aes(x = Position, y = Status, fill = ecart)) +
     geom_tile() +
     scale_y_discrete(limits = rev) +
-    scale_fill_gradient2(low = "red", mid = "green", high = "blue", midpoint = 0) +
+    scale_fill_gradient2(low = "red", mid = "lightyellow", high = "green", midpoint = 0) +
     labs(
       title = "Heatmap performance vs projections",
       fill = "Écart"
