@@ -1,9 +1,16 @@
 graph_pts_salaire <- function(data) {
   fpts_salaire <- data %>%
-    group_by(Status, Position) %>%
+    group_by(Status, Position, Period) %>%
     summarise(
       FPts = sum(FPts, na.rm = TRUE),
       masse_salariale = sum(salaire, na.rm = TRUE),
+      nb_joueurs = n(),
+      .groups = "drop"
+    ) %>%
+    group_by(Status, Position) |> 
+    summarise(
+      FPts = sum(FPts, na.rm = TRUE),
+      masse_salariale = mean(masse_salariale, na.rm = TRUE),
       nb_joueurs = n(),
       .groups = "drop"
     )
