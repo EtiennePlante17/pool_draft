@@ -1,4 +1,4 @@
-graph_hii <- function(data_reel, group, periode = c("cumulatif", "semaine") ) {
+graph_hhi <- function(data_reel, group, periode = c("cumulatif", "semaine") ) {
   
   periode <- match.arg(periode)
   

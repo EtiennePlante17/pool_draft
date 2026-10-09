@@ -355,19 +355,19 @@ graph_pts_salaire(reel)
 ```
 
 ### Concentration
-> Le Herfindall index est une mesure de concentration. Un indice de 1 représente une concentration des points dans un seul joueur versus un indice plus près de 0 représente une grande diversification des points au sein des joueurs.
+> Le Herfindahl index est une mesure de concentration. Un indice de 1 représente une concentration des points dans un seul joueur versus un indice plus près de 0 représente une grande diversification des points au sein des joueurs.
 
 ::: panel-tabset
 ### Cumulatif
 
 ```{r}
-graph_hii(reel, "Status", "cumulatif")
+graph_hhi(reel, "Status", "cumulatif")
 ```
 
 ### Hebdomadaire
 
 ```{r}
-graph_hii(reel, "Status", "semaine")
+graph_hhi(reel, "Status", "semaine")
 ```
 :::
 
