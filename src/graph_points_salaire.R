@@ -11,7 +11,7 @@ graph_pts_salaire <- function(data) {
     summarise(
       FPts = sum(FPts, na.rm = TRUE),
       masse_salariale = mean(masse_salariale, na.rm = TRUE),
-      nb_joueurs = n(),
+      nb_joueurs = mean(nb_joueurs),
       .groups = "drop"
     )
   
