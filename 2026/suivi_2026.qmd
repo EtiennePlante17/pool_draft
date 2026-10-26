@@ -9,7 +9,7 @@ execute:
 #| message: false
 
 # Params variables
-week_obs <- 3
+week_obs <- 4
 # Params fixe pour la saison
 week_tot <- 28
 year_draft <- 2026
@@ -44,9 +44,16 @@ source(here("src/table_etoile.R"))
 projections <- read_periods_proj(year_draft, week_tot) %>%
   find_optimal(c("Status", "Position", "Period"), "optimal_proj")
   
-reel <- read_periods_reel(year_draft, week_obs) %>%
-  find_optimal(c("Status", "Position", "Period"), "optimal_reel") %>%
+# Le salaire disparait lorsqu'il faut payer le premium Fantrax
+# Patch pour prendre le salaire seulement au début
+salaire <- read_periods_reel(year_draft, 1) |> 
+  select(ID, Salary) |> 
   mutate(salaire = as.numeric(gsub(",", "", Salary)))
+
+reel <- read_periods_reel(year_draft, week_obs) %>%
+  find_optimal(c("Status", "Position", "Period"), "optimal_reel") |> 
+  select(-Salary) |> 
+  left_join(salaire, by = c("ID"))
 
 data_comp_hebdo <- comp_reelvsproj(projections, reel, c("Status"), "semaine")
 
