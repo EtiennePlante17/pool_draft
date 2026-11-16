@@ -9,7 +9,7 @@ execute:
 #| message: false
 
 # Params variables
-week_obs <- 6
+week_obs <- 7
 # Params fixe pour la saison
 week_tot <- 28
 year_draft <- 2026
